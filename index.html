@@ -1,249 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Gupta Tour & Travels</title>
-
-<link
-rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"
-/>
-
-<script
-src="https://unpkg.com/leaflet/dist/leaflet.js">
-</script>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#f4f7fb;
-}
-
-header{
-background:linear-gradient(135deg,#005eff,#00bfff);
-padding:50px 20px;
-text-align:center;
-color:white;
-}
-
-header h1{
-margin:0;
-font-size:42px;
-}
-
-header p{
-font-size:18px;
-margin-top:10px;
-}
-
-.container{
-padding:20px;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:20px;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-input,
-select{
-width:100%;
-padding:15px;
-margin-top:15px;
-border-radius:12px;
-border:1px solid #ccc;
-font-size:17px;
-box-sizing:border-box;
-}
-
-button{
-width:100%;
-padding:16px;
-margin-top:20px;
-border:none;
-border-radius:12px;
-background:#005eff;
-color:white;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-}
-
-button:hover{
-background:#0045c7;
-}
-
-#map{
-height:400px;
-margin-top:20px;
-border-radius:18px;
-}
-
-.result{
-margin-top:20px;
-padding:20px;
-background:#eef5ff;
-border-radius:15px;
-font-size:20px;
-font-weight:bold;
-display:none;
-color:#005eff;
-}
-
-#bookingBox{
-display:none;
-}
-
-.whatsapp{
-position:fixed;
-bottom:20px;
-right:20px;
-background:#25D366;
-color:white;
-padding:15px 20px;
-border-radius:50px;
-text-decoration:none;
-font-weight:bold;
-}
-
-#searchResults{
-background:white;
-border-radius:12px;
-margin-top:5px;
-max-height:250px;
-overflow-y:auto;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-.search-item{
-padding:12px;
-border-bottom:1px solid #eee;
-cursor:pointer;
-}
-
-.search-item:hover{
-background:#f4f4f4;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<header>
-
-<h1>
-Gupta Tour & Travels
-</h1>
-
-<p>
-Cab • SUV • Ertiga • Bus Booking
-</p>
-
-</header>
-
-<div class="container">
-
-<div class="card">
-
-<h2>
-Book Your Ride
-</h2>
-
-<select id="vehicle">
-
-<option value="18">
-Sedan
-</option>
-
-<option value="25">
-Ertiga
-</option>
-
-<option value="30">
-SUV
-</option>
-
-<option value="50">
-Tourist Bus
-</option>
-
-</select>
-
-<input
-type="text"
-id="locationSearch"
-placeholder="Search Hotel, Airport, Station..."
->
-
-<div id="searchResults"></div>
-
-<input
-type="text"
-id="pickup"
-placeholder="Pickup Location"
-readonly
->
-
-<input
-type="text"
-id="drop"
-placeholder="Drop Location"
-readonly
->
-
-<button onclick="calculateFare()">
-
-Calculate Fare
-
-</button>
-
-<div class="result" id="result"></div>
-
-<div id="bookingBox">
-
-<input
-type="text"
-id="customerName"
-placeholder="Customer Name"
->
-
-<input
-type="tel"
-id="customerMobile"
-placeholder="Mobile Number"
->
-
-<button onclick="confirmBooking()">
-
-Confirm Booking
-
-</button>
-
-</div>
-
-<div id="map"></div>
-
-</div>
-
-</div>
-
-<a
-href="https://wa.me/918840705418"
-class="whatsapp">
-
-WhatsApp
-
-</a>
+<!-- PURA OLD SEARCH SCRIPT DELETE KAR -->
 
 <script>
 
@@ -264,6 +19,8 @@ let dropMarker;
 
 let pickupCoords = null;
 let dropCoords = null;
+
+let selectingPickup = true;
 
 document.getElementById(
 'locationSearch'
@@ -337,12 +94,20 @@ map.setView(
 15
 );
 
-if(!pickupMarker){
+if(selectingPickup){
 
 pickupCoords = {
 lat:parseFloat(lat),
 lng:parseFloat(lon)
 };
+
+if(pickupMarker){
+
+map.removeLayer(
+pickupMarker
+);
+
+}
 
 pickupMarker =
 L.marker([lat,lon])
@@ -354,14 +119,28 @@ document.getElementById(
 'pickup'
 ).value = name;
 
+selectingPickup = false;
+
+alert(
+'Now Select Drop Location'
+);
+
 }
 
-else if(!dropMarker){
+else{
 
 dropCoords = {
 lat:parseFloat(lat),
 lng:parseFloat(lon)
 };
+
+if(dropMarker){
+
+map.removeLayer(
+dropMarker
+);
+
+}
 
 dropMarker =
 L.marker([lat,lon])
@@ -372,6 +151,8 @@ L.marker([lat,lon])
 document.getElementById(
 'drop'
 ).value = name;
+
+selectingPickup = true;
 
 }
 
@@ -522,16 +303,6 @@ document.getElementById(
 'drop'
 ).value;
 
-if(!customerName || !customerMobile){
-
-alert(
-'Enter Customer Details'
-);
-
-return;
-
-}
-
 const message =
 
 `🚖 Gupta Tour Booking
@@ -559,7 +330,3 @@ window.open(
 }
 
 </script>
-
-</body>
-
-</html>
