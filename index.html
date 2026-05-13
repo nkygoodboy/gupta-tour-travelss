@@ -19,7 +19,6 @@ body{
 margin:0;
 font-family:Arial,sans-serif;
 background:#f4f7fb;
-scroll-behavior:smooth;
 }
 
 header{
@@ -47,11 +46,6 @@ border-radius:20px;
 box-shadow:0 5px 20px rgba(0,0,0,0.1);
 }
 
-.booking-box h2{
-margin-top:0;
-color:#ff5e00;
-}
-
 input{
 width:100%;
 padding:15px;
@@ -75,24 +69,32 @@ cursor:pointer;
 font-weight:bold;
 }
 
-button:hover{
-background:#e65100;
-}
-
 #bookBtn{
 display:none;
 background:#25D366;
 }
 
-#customerForm{
-display:none;
-margin-top:20px;
+.search-results{
+background:white;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+margin-top:5px;
 }
 
-#map{
-height:350px;
-border-radius:20px;
-margin-top:20px;
+.search-item{
+padding:14px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+font-size:15px;
+}
+
+.search-item:hover{
+background:#f4f4f4;
+}
+
+#customerForm{
+display:none;
 }
 
 .result{
@@ -100,58 +102,24 @@ background:white;
 margin:20px;
 padding:20px;
 border-radius:20px;
-box-shadow:0 5px 20px rgba(0,0,0,0.1);
 text-align:center;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
 }
 
 .result h2{
-color:#ff5e00;
-font-size:34px;
 margin:0;
+font-size:34px;
+color:#ff5e00;
 }
 
 .result p{
 font-size:22px;
-margin-top:15px;
 }
 
-.search-results{
-background:white;
-border-radius:10px;
-max-height:200px;
-overflow:auto;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
-}
-
-.search-item{
-padding:12px;
-border-bottom:1px solid #eee;
-cursor:pointer;
-}
-
-.search-item:hover{
-background:#f4f4f4;
-}
-
-.contact{
-background:#111;
-color:white;
-text-align:center;
-padding:40px 20px;
-margin-top:30px;
-}
-
-.whatsapp{
-position:fixed;
-bottom:20px;
-right:20px;
-background:#25D366;
-color:white;
-padding:15px 22px;
-border-radius:50px;
-text-decoration:none;
-font-weight:bold;
-font-size:18px;
+#map{
+height:350px;
+border-radius:20px;
+margin-top:20px;
 }
 
 </style>
@@ -167,7 +135,7 @@ Gupta Tour & Travels
 </h1>
 
 <p>
-Fast • Safe • Trusted Cab Booking
+Fast • Safe • Trusted Ride Booking
 </p>
 
 </header>
@@ -175,15 +143,13 @@ Fast • Safe • Trusted Cab Booking
 <section class="booking-box">
 
 <h2>
-Book Your Ride
+Book Your Cab
 </h2>
-
-<div>
 
 <input
 type="text"
 id="pickup"
-placeholder="Enter Pickup Location"
+placeholder="Pickup Location"
 autocomplete="off"
 onkeyup="liveSearch(this.value,'pickupResults','pickup')"
 >
@@ -193,14 +159,10 @@ id="pickupResults"
 class="search-results">
 </div>
 
-</div>
-
-<div style="margin-top:15px;">
-
 <input
 type="text"
 id="drop"
-placeholder="Enter Drop Location"
+placeholder="Drop Location"
 autocomplete="off"
 onkeyup="liveSearch(this.value,'dropResults','drop')"
 >
@@ -208,8 +170,6 @@ onkeyup="liveSearch(this.value,'dropResults','drop')"
 <div
 id="dropResults"
 class="search-results">
-</div>
-
 </div>
 
 <button onclick="calculateFare()">
@@ -231,7 +191,7 @@ placeholder="Enter Mobile Number"
 >
 
 <button id="bookBtn">
-I Want To Book
+Confirm Booking
 </button>
 
 </div>
@@ -252,28 +212,6 @@ Fare ₹0
 
 </section>
 
-<section class="contact">
-
-<h2>
-Contact Us
-</h2>
-
-<p>
-📞 8840705418
-</p>
-
-<p>
-📍 Lucknow, India
-</p>
-
-</section>
-
-<a
-href="https://wa.me/918840705418"
-class="whatsapp">
-WhatsApp
-</a>
-
 <script
 src="https://unpkg.com/leaflet/dist/leaflet.js">
 </script>
@@ -283,8 +221,8 @@ src="https://unpkg.com/leaflet/dist/leaflet.js">
 const RATE_PER_KM = 25;
 
 const map = L.map('map').setView(
-[26.8467,80.9462],
-10
+[25.3176,82.9739],
+7
 );
 
 L.tileLayer(
@@ -314,14 +252,14 @@ return;
 }
 
 const response = await fetch(
-`https://nominatim.openstreetmap.org/search?format=json&q=${query}`
+`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${query}`
 );
 
 const data = await response.json();
 
 let html='';
 
-data.slice(0,5).forEach(place=>{
+data.forEach(place=>{
 
 html += `
 
@@ -329,7 +267,7 @@ html += `
 class="search-item"
 onclick="
 selectLocation(
-'${place.display_name.replace(/'/g,"")},
+\`${place.display_name}\`,
 '${inputId}',
 '${resultBox}'
 )
@@ -384,15 +322,19 @@ lon:parseFloat(data[0].lon)
 async function calculateFare(){
 
 const pickup =
-document.getElementById('pickup').value;
+document.getElementById(
+'pickup'
+).value;
 
 const drop =
-document.getElementById('drop').value;
+document.getElementById(
+'drop'
+).value;
 
 if(!pickup || !drop){
 
 alert(
-'Enter Pickup & Drop'
+'Please Enter Pickup & Drop'
 );
 
 return;
@@ -485,7 +427,7 @@ document.getElementById(
 if(!customerName || !customerNumber){
 
 alert(
-'Enter Name & Number'
+'Please Enter Name & Number'
 );
 
 return;
