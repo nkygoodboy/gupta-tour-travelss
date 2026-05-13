@@ -115,6 +115,32 @@ font-size:22px;
 margin-top:15px;
 }
 
+.search-results{
+background:white;
+border-radius:10px;
+max-height:200px;
+overflow:auto;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.search-item{
+padding:12px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+}
+
+.search-item:hover{
+background:#f4f4f4;
+}
+
+.contact{
+background:#111;
+color:white;
+text-align:center;
+padding:40px 20px;
+margin-top:30px;
+}
+
 .whatsapp{
 position:fixed;
 bottom:20px;
@@ -141,7 +167,7 @@ Gupta Tour & Travels
 </h1>
 
 <p>
-Fast • Safe • Trusted Cab Booking Service
+Fast • Safe • Trusted Cab Booking
 </p>
 
 </header>
@@ -152,25 +178,39 @@ Fast • Safe • Trusted Cab Booking Service
 Book Your Ride
 </h2>
 
+<div>
+
 <input
-list="pickupList"
 type="text"
 id="pickup"
 placeholder="Enter Pickup Location"
-oninput="searchPickup()"
+autocomplete="off"
+onkeyup="liveSearch(this.value,'pickupResults','pickup')"
 >
 
-<datalist id="pickupList"></datalist>
+<div
+id="pickupResults"
+class="search-results">
+</div>
+
+</div>
+
+<div style="margin-top:15px;">
 
 <input
-list="dropList"
 type="text"
 id="drop"
 placeholder="Enter Drop Location"
-oninput="searchDrop()"
+autocomplete="off"
+onkeyup="liveSearch(this.value,'dropResults','drop')"
 >
 
-<datalist id="dropList"></datalist>
+<div
+id="dropResults"
+class="search-results">
+</div>
+
+</div>
 
 <button onclick="calculateFare()">
 Calculate Fare
@@ -212,6 +252,22 @@ Fare ₹0
 
 </section>
 
+<section class="contact">
+
+<h2>
+Contact Us
+</h2>
+
+<p>
+📞 8840705418
+</p>
+
+<p>
+📍 Lucknow, India
+</p>
+
+</section>
+
 <a
 href="https://wa.me/918840705418"
 class="whatsapp">
@@ -241,9 +297,17 @@ attribution:'© OpenStreetMap'
 let pickupMarker;
 let dropMarker;
 
-async function searchLocation(query,listId){
+async function liveSearch(
+query,
+resultBox,
+inputId
+){
 
 if(query.length < 2){
+
+document.getElementById(
+resultBox
+).innerHTML='';
 
 return;
 
@@ -255,40 +319,50 @@ const response = await fetch(
 
 const data = await response.json();
 
-const list =
-document.getElementById(listId);
-
-list.innerHTML = '';
+let html='';
 
 data.slice(0,5).forEach(place=>{
 
-const option =
-document.createElement('option');
+html += `
 
-option.value =
-place.display_name;
+<div
+class="search-item"
+onclick="
+selectLocation(
+'${place.display_name.replace(/'/g,"")},
+'${inputId}',
+'${resultBox}'
+)
+"
+>
 
-list.appendChild(option);
+${place.display_name}
+
+</div>
+
+`;
 
 });
 
-}
-
-function searchPickup(){
-
-searchLocation(
-document.getElementById('pickup').value,
-'pickupList'
-);
+document.getElementById(
+resultBox
+).innerHTML = html;
 
 }
 
-function searchDrop(){
+function selectLocation(
+value,
+inputId,
+resultBox
+){
 
-searchLocation(
-document.getElementById('drop').value,
-'dropList'
-);
+document.getElementById(
+inputId
+).value = value;
+
+document.getElementById(
+resultBox
+).innerHTML='';
 
 }
 
@@ -386,6 +460,11 @@ document.getElementById(
 
 document.getElementById(
 'customerForm'
+).style.display =
+'block';
+
+document.getElementById(
+'bookBtn'
 ).style.display =
 'block';
 
