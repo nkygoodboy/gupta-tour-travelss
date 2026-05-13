@@ -106,6 +106,11 @@ button:hover{
 background:#e65100;
 }
 
+#bookBtn{
+display:none;
+background:#25D366;
+}
+
 #map{
 height:350px;
 border-radius:20px;
@@ -210,35 +215,23 @@ Fast • Safe • Trusted Cab Booking Service
 <section class="stats">
 
 <div class="stat-box">
-
 <h2>500+</h2>
-
 <p>Happy Customers</p>
-
 </div>
 
 <div class="stat-box">
-
 <h2>24×7</h2>
-
 <p>Customer Support</p>
-
 </div>
 
 <div class="stat-box">
-
 <h2>4.9★</h2>
-
 <p>Customer Rating</p>
-
 </div>
 
 <div class="stat-box">
-
 <h2>100%</h2>
-
 <p>Safe Travel</p>
-
 </div>
 
 </section>
@@ -263,6 +256,10 @@ placeholder="Enter Drop Location"
 
 <button onclick="calculateFare()">
 Calculate Fare
+</button>
+
+<button id="bookBtn">
+Confirm Booking
 </button>
 
 <div id="map"></div>
@@ -374,12 +371,9 @@ Contact Us
 </section>
 
 <a
-id="whatsappBtn"
-class="whatsapp"
-target="_blank"
-href="#"
->
-Book on WhatsApp
+href="https://wa.me/918840705418"
+class="whatsapp">
+WhatsApp
 </a>
 
 <script
@@ -387,6 +381,8 @@ src="https://unpkg.com/leaflet/dist/leaflet.js">
 </script>
 
 <script>
+
+const RATE_PER_KM = 18;
 
 const map = L.map('map').setView(
 [26.8467,80.9462],
@@ -403,43 +399,57 @@ attribution:'© OpenStreetMap'
 let pickupMarker;
 let dropMarker;
 
-async function getCoordinates(place){
+async function searchPlace(place){
 
-const url =
-`https://nominatim.openstreetmap.org/search?format=json&q=${place}`;
-
-const response = await fetch(url);
+const response = await fetch(
+`https://nominatim.openstreetmap.org/search?format=json&q=${place}`
+);
 
 const data = await response.json();
 
-return {
-lat:parseFloat(data[0].lat),
-lon:parseFloat(data[0].lon)
-};
+return data[0];
 
 }
 
 async function calculateFare(){
 
 const pickup =
-document.getElementById('pickup').value;
+document.getElementById(
+'pickup'
+).value;
 
 const drop =
-document.getElementById('drop').value;
+document.getElementById(
+'drop'
+).value;
 
 if(!pickup || !drop){
 
-alert('Enter Pickup & Drop Location');
+alert(
+'Enter Pickup & Drop Location'
+);
 
 return;
 
 }
 
-const pickupCoords =
-await getCoordinates(pickup);
+const pickupData =
+await searchPlace(pickup);
 
-const dropCoords =
-await getCoordinates(drop);
+const dropData =
+await searchPlace(drop);
+
+const pickupLat =
+parseFloat(pickupData.lat);
+
+const pickupLon =
+parseFloat(pickupData.lon);
+
+const dropLat =
+parseFloat(dropData.lat);
+
+const dropLon =
+parseFloat(dropData.lon);
 
 if(pickupMarker){
 
@@ -453,29 +463,36 @@ map.removeLayer(dropMarker);
 
 }
 
-pickupMarker = L.marker(
-[pickupCoords.lat,pickupCoords.lon]
-).addTo(map);
+pickupMarker =
+L.marker([pickupLat,pickupLon])
+.addTo(map)
+.bindPopup('Pickup')
+.openPopup();
 
-dropMarker = L.marker(
-[dropCoords.lat,dropCoords.lon]
-).addTo(map);
+dropMarker =
+L.marker([dropLat,dropLon])
+.addTo(map)
+.bindPopup('Drop')
+.openPopup();
 
 map.fitBounds([
-[pickupCoords.lat,pickupCoords.lon],
-[dropCoords.lat,dropCoords.lon]
+
+[pickupLat,pickupLon],
+
+[dropLat,dropLon]
+
 ]);
 
 const distance =
 getDistanceFromLatLonInKm(
-pickupCoords.lat,
-pickupCoords.lon,
-dropCoords.lat,
-dropCoords.lon
+pickupLat,
+pickupLon,
+dropLat,
+dropLon
 );
 
 const fare =
-Math.round(distance * 80);
+Math.round(distance * RATE_PER_KM);
 
 document.getElementById(
 'distance'
@@ -488,13 +505,37 @@ document.getElementById(
 'Fare ₹' + fare;
 
 document.getElementById(
-'whatsappBtn'
-).href =
-`https://wa.me/918840705418?text=
-Pickup:${pickup}
-Drop:${drop}
-Distance:${distance.toFixed(2)}KM
-Fare:₹${fare}`;
+'bookBtn'
+).style.display =
+'block';
+
+document.getElementById(
+'bookBtn'
+).onclick = function(){
+
+const whatsappMessage =
+
+`🚖 Gupta Tour & Travels Booking
+
+📍 Pickup: ${pickup}
+
+📍 Drop: ${drop}
+
+🛣 Distance: ${distance.toFixed(2)} KM
+
+💰 Fare: ₹${fare}
+
+✅ Customer wants to confirm booking`;
+
+window.open(
+
+`https://wa.me/918840705418?text=${encodeURIComponent(whatsappMessage)}`,
+
+'_blank'
+
+);
+
+};
 
 }
 
@@ -512,15 +553,20 @@ const dLat = deg2rad(lat2-lat1);
 const dLon = deg2rad(lon2-lon1);
 
 const a =
+
 Math.sin(dLat/2) *
 Math.sin(dLat/2) +
+
 Math.cos(deg2rad(lat1)) *
 Math.cos(deg2rad(lat2)) *
+
 Math.sin(dLon/2) *
 Math.sin(dLon/2);
 
 const c =
-2 * Math.atan2(
+
+2 *
+Math.atan2(
 Math.sqrt(a),
 Math.sqrt(1-a)
 );
