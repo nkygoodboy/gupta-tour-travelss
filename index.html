@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -8,29 +8,38 @@
 
 <title>Gupta Tour & Travels</title>
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script
+src="https://unpkg.com/leaflet/dist/leaflet.js">
+</script>
 
 <style>
 
 body{
 margin:0;
-font-family:Arial;
+font-family:Arial,sans-serif;
 background:#f4f7fb;
 }
 
 header{
 background:linear-gradient(135deg,#005eff,#00bfff);
 padding:50px 20px;
-color:white;
 text-align:center;
+color:white;
 }
 
 header h1{
 margin:0;
-font-size:40px;
+font-size:42px;
+}
+
+header p{
+font-size:18px;
+margin-top:10px;
 }
 
 .container{
@@ -44,13 +53,14 @@ border-radius:20px;
 box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
-input,select{
+input,
+select{
 width:100%;
 padding:15px;
 margin-top:15px;
 border-radius:12px;
 border:1px solid #ccc;
-font-size:16px;
+font-size:17px;
 box-sizing:border-box;
 }
 
@@ -64,32 +74,38 @@ background:#005eff;
 color:white;
 font-size:18px;
 font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#0045c7;
 }
 
 #map{
-height:350px;
+height:400px;
 margin-top:20px;
 border-radius:18px;
 }
 
 .result{
 margin-top:20px;
-background:#eef5ff;
 padding:20px;
+background:#eef5ff;
 border-radius:15px;
 font-size:20px;
 font-weight:bold;
 display:none;
+color:#005eff;
 }
 
-#booking{
+#bookingBox{
 display:none;
 }
 
 .whatsapp{
 position:fixed;
-right:20px;
 bottom:20px;
+right:20px;
 background:#25D366;
 color:white;
 padding:15px 20px;
@@ -106,7 +122,9 @@ font-weight:bold;
 
 <header>
 
-<h1>Gupta Tour & Travels</h1>
+<h1>
+Gupta Tour & Travels
+</h1>
 
 <p>
 Cab • SUV • Ertiga • Bus Booking
@@ -118,17 +136,9 @@ Cab • SUV • Ertiga • Bus Booking
 
 <div class="card">
 
-<h2>Book Your Ride</h2>
-
-<input
-type="text"
-id="pickup"
-placeholder="Pickup Location">
-
-<input
-type="text"
-id="drop"
-placeholder="Drop Location">
+<h2>
+Book Your Ride
+</h2>
 
 <select id="vehicle">
 
@@ -150,26 +160,46 @@ Tourist Bus
 
 </select>
 
+<input
+type="text"
+id="pickup"
+placeholder="Pickup Location (Tap Map)"
+readonly
+>
+
+<input
+type="text"
+id="drop"
+placeholder="Drop Location (Tap Map)"
+readonly
+>
+
 <button onclick="calculateFare()">
+
 Calculate Fare
+
 </button>
 
 <div class="result" id="result"></div>
 
-<div id="booking">
+<div id="bookingBox">
 
 <input
 type="text"
-id="name"
-placeholder="Customer Name">
+id="customerName"
+placeholder="Customer Name"
+>
 
 <input
 type="tel"
-id="mobile"
-placeholder="Mobile Number">
+id="customerMobile"
+placeholder="Mobile Number"
+>
 
-<button onclick="bookNow()">
+<button onclick="confirmBooking()">
+
 Confirm Booking
+
 </button>
 
 </div>
@@ -192,7 +222,7 @@ WhatsApp
 
 const map = L.map('map').setView(
 [25.3176,82.9739],
-8
+7
 );
 
 L.tileLayer(
@@ -205,9 +235,14 @@ maxZoom:19
 let pickupMarker;
 let dropMarker;
 
+let pickupCoords = null;
+let dropCoords = null;
+
 map.on('click',function(e){
 
 if(!pickupMarker){
+
+pickupCoords = e.latlng;
 
 pickupMarker =
 L.marker(e.latlng)
@@ -216,14 +251,18 @@ L.marker(e.latlng)
 document.getElementById(
 'pickup'
 ).value =
+
 e.latlng.lat.toFixed(5)
 +
-','+
+', '
++
 e.latlng.lng.toFixed(5);
 
 }
 
 else if(!dropMarker){
+
+dropCoords = e.latlng;
 
 dropMarker =
 L.marker(e.latlng)
@@ -232,9 +271,11 @@ L.marker(e.latlng)
 document.getElementById(
 'drop'
 ).value =
+
 e.latlng.lat.toFixed(5)
 +
-','+
+', '
++
 e.latlng.lng.toFixed(5);
 
 }
@@ -243,30 +284,76 @@ e.latlng.lng.toFixed(5);
 
 function calculateFare(){
 
-const pickup =
-document.getElementById('pickup').value;
+if(!pickupCoords || !dropCoords){
 
-const drop =
-document.getElementById('drop').value;
-
-const vehicle =
-parseInt(
-document.getElementById('vehicle').value
+alert(
+'Select Pickup & Drop From Map'
 );
-
-if(!pickup || !drop){
-
-alert('Select pickup and drop');
 
 return;
 
 }
 
+const rate =
+parseInt(
+document.getElementById(
+'vehicle'
+).value
+);
+
+const vehicleName =
+document.getElementById(
+'vehicle'
+).options[
+document.getElementById(
+'vehicle'
+).selectedIndex
+].text;
+
+const lat1 =
+pickupCoords.lat;
+
+const lon1 =
+pickupCoords.lng;
+
+const lat2 =
+dropCoords.lat;
+
+const lon2 =
+dropCoords.lng;
+
+const R = 6371;
+
+const dLat =
+(lat2-lat1) *
+Math.PI/180;
+
+const dLon =
+(lon2-lon1) *
+Math.PI/180;
+
+const a =
+
+Math.sin(dLat/2) *
+Math.sin(dLat/2) +
+
+Math.cos(lat1*Math.PI/180) *
+Math.cos(lat2*Math.PI/180) *
+
+Math.sin(dLon/2) *
+Math.sin(dLon/2);
+
+const c =
+2 * Math.atan2(
+Math.sqrt(a),
+Math.sqrt(1-a)
+);
+
 const distance =
-Math.floor(Math.random()*50)+10;
+(R*c).toFixed(2);
 
 const fare =
-distance * vehicle;
+Math.round(distance * rate);
 
 document.getElementById(
 'result'
@@ -277,61 +364,92 @@ document.getElementById(
 ).innerHTML =
 
 `
-Distance: ${distance} KM
+🚘 ${vehicleName}
+
 <br><br>
-Total Fare: ₹${fare}
+
+🛣 Distance:
+${distance} KM
+
+<br><br>
+
+💰 Total Fare:
+₹${fare}
 `;
 
 document.getElementById(
-'booking'
+'bookingBox'
 ).style.display='block';
 
 }
 
-function bookNow(){
+function confirmBooking(){
 
-const name =
-document.getElementById('name').value;
+const customerName =
+document.getElementById(
+'customerName'
+).value;
 
-const mobile =
-document.getElementById('mobile').value;
+const customerMobile =
+document.getElementById(
+'customerMobile'
+).value;
 
-const pickup =
-document.getElementById('pickup').value;
-
-const drop =
-document.getElementById('drop').value;
-
-const vehicle =
-document.getElementById('vehicle')
-.options[
-document.getElementById('vehicle')
-.selectedIndex
+const vehicleName =
+document.getElementById(
+'vehicle'
+).options[
+document.getElementById(
+'vehicle'
+).selectedIndex
 ].text;
 
-const fare =
-document.getElementById('result')
-.innerText;
+const result =
+document.getElementById(
+'result'
+).innerText;
 
-const msg =
+const pickup =
+document.getElementById(
+'pickup'
+).value;
+
+const drop =
+document.getElementById(
+'drop'
+).value;
+
+if(!customerName || !customerMobile){
+
+alert(
+'Enter Customer Details'
+);
+
+return;
+
+}
+
+const message =
 
 `🚖 Gupta Tour Booking
 
-👤 Name: ${name}
+👤 Name: ${customerName}
 
-📞 Mobile: ${mobile}
+📞 Mobile: ${customerMobile}
 
-📍 Pickup: ${pickup}
+🚘 Vehicle: ${vehicleName}
 
-📍 Drop: ${drop}
+📍 Pickup:
+${pickup}
 
-🚘 Vehicle: ${vehicle}
+📍 Drop:
+${drop}
 
-💰 ${fare}`;
+${result}`;
 
 window.open(
 
-`https://wa.me/918840705418?text=${encodeURIComponent(msg)}`
+`https://wa.me/918840705418?text=${encodeURIComponent(message)}`
 
 );
 
@@ -340,4 +458,5 @@ window.open(
 </script>
 
 </body>
+
 </html>
