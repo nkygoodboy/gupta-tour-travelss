@@ -1,1 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Gupta Tour & Travels</title>
+
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f4f7fb;
+}
+
+header{
+background:linear-gradient(135deg,#ff7b00,#ff3c00);
+padding:60px 20px;
+text-align:center;
+color:white;
+}
+
+header h1{
+margin:0;
+font-size:42px;
+}
+
+header p{
+font-size:20px;
+margin-top:10px;
+}
+
+.booking-box{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:20px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+border:1px solid #ccc;
+font-size:18px;
+box-sizing:border-box;
+}
+
+button{
+width:100%;
+padding:16px;
+margin-top:20px;
+border:none;
+border-radius:12px;
+background:#ff5e00;
+color:white;
+font-size:20px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#e65100;
+}
+
+#map{
+height:350px;
+border-radius:20px;
+margin-top:20px;
+}
+
+.result{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:20px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.result h2{
+color:#ff5e00;
+font-size:32px;
+margin:0;
+}
+
+.result p{
+font-size:22px;
+margin-top:15px;
+}
+
+.whatsapp{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#25D366;
+color:white;
+padding:15px 22px;
+border-radius:50px;
+text-decoration:none;
+font-weight:bold;
+font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>
+Gupta Tour & Travels
+</h1>
+
+<p>
+Fast & Trusted Cab Booking Service
+</p>
+
+</header>
+
+<div class="booking-box">
+
+<input
+type="text"
+id="pickup"
+placeholder="Enter Pickup Location"
+>
+
+<input
+type="text"
+id="drop"
+placeholder="Enter Drop Location"
+>
+
+<button onclick="calculateFare()">
+Calculate Fare
+</button>
+
+<div id="map"></div>
+
+</div>
+
+<div class="result">
+
+<h2 id="distance">
+0 KM
+</h2>
+
+<p id="fare">
+Fare ₹0
+</p>
+
+</div>
+
+<a
+id="whatsappBtn"
+class="whatsapp"
+target="_blank"
+href="#"
+>
+Book on WhatsApp
+</a>
+
+<script
+src="https://unpkg.com/leaflet/dist/leaflet.js">
+</script>
+
+<script>
+
+const map = L.map('map').setView(
+[26.8467,80.9462],
+10
+);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+attribution:'© OpenStreetMap'
+}
+).addTo(map);
+
+let pickupMarker;
+let dropMarker;
+
+async function getCoordinates(place){
+
+const url =
+`https://nominatim.openstreetmap.org/search?format=json&q=${place}`;
+
+const response = await fetch(url);
+
+const data = await response.json();
+
+return {
+lat:parseFloat(data[0].lat),
+lon:parseFloat(data[0].lon)
+};
+
+}
+
+async function calculateFare(){
+
+const pickup =
+document.getElementById('pickup').value;
+
+const drop =
+document.getElementById('drop').value;
+
+if(!pickup || !drop){
+
+alert('Enter Pickup & Drop Location');
+
+return;
+
+}
+
+const pickupCoords =
+await getCoordinates(pickup);
+
+const dropCoords =
+await getCoordinates(drop);
+
+if(pickupMarker){
+
+map.removeLayer(pickupMarker);
+
+}
+
+if(dropMarker){
+
+map.removeLayer(dropMarker);
+
+}
+
+pickupMarker = L.marker(
+[pickupCoords.lat,pickupCoords.lon]
+).addTo(map);
+
+dropMarker = L.marker(
+[dropCoords.lat,dropCoords.lon]
+).addTo(map);
+
+map.fitBounds([
+[pickupCoords.lat,pickupCoords.lon],
+[dropCoords.lat,dropCoords.lon]
+]);
+
+const distance =
+getDistanceFromLatLonInKm(
+pickupCoords.lat,
+pickupCoords.lon,
+dropCoords.lat,
+dropCoords.lon
+);
+
+const fare =
+Math.round(distance * 80);
+
+document.getElementById(
+'distance'
+).innerHTML =
+distance.toFixed(2) + ' KM';
+
+document.getElementById(
+'fare'
+).innerHTML =
+'Fare ₹' + fare;
+
+document.getElementById(
+'whatsappBtn'
+).href =
+`https://wa.me/918840705418?text=
+Pickup:${pickup}
+Drop:${drop}
+Distance:${distance.toFixed(2)}KM
+Fare:₹${fare}`;
+
+}
+
+function getDistanceFromLatLonInKm(
+lat1,
+lon1,
+lat2,
+lon2
+){
+
+const R = 6371;
+
+const dLat = deg2rad(lat2-lat1);
+
+const dLon = deg2rad(lon2-lon1);
+
+const a =
+Math.sin(dLat/2) *
+Math.sin(dLat/2) +
+Math.cos(deg2rad(lat1)) *
+Math.cos(deg2rad(lat2)) *
+Math.sin(dLon/2) *
+Math.sin(dLon/2);
+
+const c =
+2 * Math.atan2(
+Math.sqrt(a),
+Math.sqrt(1-a)
+);
+
+return R * c;
+
+}
+
+function deg2rad(deg){
+
+return deg * (Math.PI/180);
+
+}
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Gupta Tour & Travels</title>
+
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f4f7fb;
+}
+
+header{
+background:linear-gradient(135deg,#ff7b00,#ff3c00);
+padding:60px 20px;
+text-align:center;
+color:white;
+}
+
+header h1{
+margin:0;
+font-size:42px;
+}
+
+header p{
+font-size:20px;
+margin-top:10px;
+}
+
+.booking-box{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:20px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+border:1px solid #ccc;
+font-size:18px;
+box-sizing:border-box;
+}
+
+button{
+width:100%;
+padding:16px;
+margin-top:20px;
+border:none;
+border-radius:12px;
+background:#ff5e00;
+color:white;
+font-size:20px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#e65100;
+}
+
+#map{
+height:350px;
+border-radius:20px;
+margin-top:20px;
+}
+
+.result{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:20px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.result h2{
+color:#ff5e00;
+font-size:32px;
+margin:0;
+}
+
+.result p{
+font-size:22px;
+margin-top:15px;
+}
+
+.whatsapp{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#25D366;
+color:white;
+padding:15px 22px;
+border-radius:50px;
+text-decoration:none;
+font-weight:bold;
+font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>
+Gupta Tour & Travels
+</h1>
+
+<p>
+Fast & Trusted Cab Booking Service
+</p>
+
+</header>
+
+<div class="booking-box">
+
+<input
+type="text"
+id="pickup"
+placeholder="Enter Pickup Location"
+>
+
+<input
+type="text"
+id="drop"
+placeholder="Enter Drop Location"
+>
+
+<button onclick="calculateFare()">
+Calculate Fare
+</button>
+
+<div id="map"></div>
+
+</div>
+
+<div class="result">
+
+<h2 id="distance">
+0 KM
+</h2>
+
+<p id="fare">
+Fare ₹0
+</p>
+
+</div>
+
+<a
+id="whatsappBtn"
+class="whatsapp"
+target="_blank"
+href="#"
+>
+Book on WhatsApp
+</a>
+
+<script
+src="https://unpkg.com/leaflet/dist/leaflet.js">
+</script>
+
+<script>
+
+const map = L.map('map').setView(
+[26.8467,80.9462],
+10
+);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+attribution:'© OpenStreetMap'
+}
+).addTo(map);
+
+let pickupMarker;
+let dropMarker;
+
+async function getCoordinates(place){
+
+const url =
+`https://nominatim.openstreetmap.org/search?format=json&q=${place}`;
+
+const response = await fetch(url);
+
+const data = await response.json();
+
+return {
+lat:parseFloat(data[0].lat),
+lon:parseFloat(data[0].lon)
+};
+
+}
+
+async function calculateFare(){
+
+const pickup =
+document.getElementById('pickup').value;
+
+const drop =
+document.getElementById('drop').value;
+
+if(!pickup || !drop){
+
+alert('Enter Pickup & Drop Location');
+
+return;
+
+}
+
+const pickupCoords =
+await getCoordinates(pickup);
+
+const dropCoords =
+await getCoordinates(drop);
+
+if(pickupMarker){
+
+map.removeLayer(pickupMarker);
+
+}
+
+if(dropMarker){
+
+map.removeLayer(dropMarker);
+
+}
+
+pickupMarker = L.marker(
+[pickupCoords.lat,pickupCoords.lon]
+).addTo(map);
+
+dropMarker = L.marker(
+[dropCoords.lat,dropCoords.lon]
+).addTo(map);
+
+map.fitBounds([
+[pickupCoords.lat,pickupCoords.lon],
+[dropCoords.lat,dropCoords.lon]
+]);
+
+const distance =
+getDistanceFromLatLonInKm(
+pickupCoords.lat,
+pickupCoords.lon,
+dropCoords.lat,
+dropCoords.lon
+);
+
+const fare =
+Math.round(distance * 80);
+
+document.getElementById(
+'distance'
+).innerHTML =
+distance.toFixed(2) + ' KM';
+
+document.getElementById(
+'fare'
+).innerHTML =
+'Fare ₹' + fare;
+
+document.getElementById(
+'whatsappBtn'
+).href =
+`https://wa.me/918840705418?text=
+Pickup:${pickup}
+Drop:${drop}
+Distance:${distance.toFixed(2)}KM
+Fare:₹${fare}`;
+
+}
+
+function getDistanceFromLatLonInKm(
+lat1,
+lon1,
+lat2,
+lon2
+){
+
+const R = 6371;
+
+const dLat = deg2rad(lat2-lat1);
+
+const dLon = deg2rad(lon2-lon1);
+
+const a =
+Math.sin(dLat/2) *
+Math.sin(dLat/2) +
+Math.cos(deg2rad(lat1)) *
+Math.cos(deg2rad(lat2)) *
+Math.sin(dLon/2) *
+Math.sin(dLon/2);
+
+const c =
+2 * Math.atan2(
+Math.sqrt(a),
+Math.sqrt(1-a)
+);
+
+return R * c;
+
+}
+
+function deg2rad(deg){
+
+return deg * (Math.PI/180);
+
+}
+
+</script>
+
+</body>
+</html>
