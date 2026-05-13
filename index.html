@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 
 <meta charset="UTF-8">
@@ -8,33 +8,28 @@
 <title>Gupta Tour & Travels</title>
 
 <link rel="stylesheet"
-href="https://apis.mappls.com/advancedmaps/api/niwgdmbccpgntfpartcsterzyuqwrxtumwqb/map_sdk?layer=vector&v=3.0">
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
-<script src="https://apis.mappls.com/advancedmaps/api/niwgdmbccpgntfpartcsterzyuqwrxtumwqb/map_sdk?layer=vector&v=3.0"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 
 body{
 margin:0;
-font-family:Arial,sans-serif;
+font-family:Arial;
 background:#f4f7fb;
 }
 
 header{
 background:linear-gradient(135deg,#005eff,#00bfff);
 padding:50px 20px;
-text-align:center;
 color:white;
+text-align:center;
 }
 
 header h1{
 margin:0;
-font-size:42px;
-}
-
-header p{
-font-size:18px;
-margin-top:10px;
+font-size:40px;
 }
 
 .container{
@@ -46,17 +41,15 @@ background:white;
 padding:20px;
 border-radius:20px;
 box-shadow:0 5px 15px rgba(0,0,0,0.1);
-margin-top:20px;
 }
 
-input,
-select{
+input,select{
 width:100%;
 padding:15px;
 margin-top:15px;
 border-radius:12px;
 border:1px solid #ccc;
-font-size:17px;
+font-size:16px;
 box-sizing:border-box;
 }
 
@@ -70,31 +63,25 @@ background:#005eff;
 color:white;
 font-size:18px;
 font-weight:bold;
-cursor:pointer;
-}
-
-button:hover{
-background:#0045c7;
 }
 
 #map{
 height:350px;
-border-radius:18px;
 margin-top:20px;
+border-radius:18px;
 }
 
 .result{
-background:#eef5ff;
-padding:18px;
-border-radius:15px;
 margin-top:20px;
+background:#eef5ff;
+padding:20px;
+border-radius:15px;
 font-size:20px;
 font-weight:bold;
-color:#005eff;
 display:none;
 }
 
-.book-section{
+#booking{
 display:none;
 }
 
@@ -121,7 +108,7 @@ font-weight:bold;
 <h1>Gupta Tour & Travels</h1>
 
 <p>
-Cab | SUV | Ertiga | Bus Booking
+Cab • SUV • Ertiga • Bus Booking
 </p>
 
 </header>
@@ -130,9 +117,7 @@ Cab | SUV | Ertiga | Bus Booking
 
 <div class="card">
 
-<h2>
-Book Your Ride
-</h2>
+<h2>Book Your Ride</h2>
 
 <input
 type="text"
@@ -147,47 +132,43 @@ placeholder="Drop Location">
 <select id="vehicle">
 
 <option value="18">
-Sedan - ₹18/km
+Sedan
 </option>
 
 <option value="25">
-Ertiga - ₹25/km
+Ertiga
 </option>
 
 <option value="30">
-SUV - ₹30/km
+SUV
 </option>
 
 <option value="50">
-Tourist Bus - ₹50/km
+Tourist Bus
 </option>
 
 </select>
 
 <button onclick="calculateFare()">
-
 Calculate Fare
-
 </button>
 
 <div class="result" id="result"></div>
 
-<div class="book-section" id="bookSection">
+<div id="booking">
 
 <input
 type="text"
-id="customerName"
+id="name"
 placeholder="Customer Name">
 
 <input
 type="tel"
-id="customerMobile"
+id="mobile"
 placeholder="Mobile Number">
 
-<button onclick="sendWhatsApp()">
-
+<button onclick="bookNow()">
 Confirm Booking
-
 </button>
 
 </div>
@@ -202,29 +183,64 @@ Confirm Booking
 href="https://wa.me/918840705418"
 class="whatsapp">
 
-WhatsApp Us
+WhatsApp
 
 </a>
 
 <script>
 
-let map;
-
-function initMap(){
-
-map = new mappls.Map(
-'map',
-{
-center:[25.3176,82.9739],
-zoom:10
-}
+const map = L.map('map').setView(
+[25.3176,82.9739],
+8
 );
 
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+maxZoom:19
+}
+).addTo(map);
+
+let pickupMarker;
+let dropMarker;
+
+map.on('click',function(e){
+
+if(!pickupMarker){
+
+pickupMarker =
+L.marker(e.latlng)
+.addTo(map);
+
+document.getElementById(
+'pickup'
+).value =
+e.latlng.lat.toFixed(5)
++
+','+
+e.latlng.lng.toFixed(5);
+
 }
 
-window.onload = initMap;
+else if(!dropMarker){
 
-async function calculateFare(){
+dropMarker =
+L.marker(e.latlng)
+.addTo(map);
+
+document.getElementById(
+'drop'
+).value =
+e.latlng.lat.toFixed(5)
++
+','+
+e.latlng.lng.toFixed(5);
+
+}
+
+});
+
+function calculateFare(){
 
 const pickup =
 document.getElementById('pickup').value;
@@ -232,26 +248,24 @@ document.getElementById('pickup').value;
 const drop =
 document.getElementById('drop').value;
 
-const rate =
+const vehicle =
 parseInt(
 document.getElementById('vehicle').value
 );
 
 if(!pickup || !drop){
 
-alert('Enter pickup and drop');
+alert('Select pickup and drop');
 
 return;
 
 }
 
-const fakeDistance =
-Math.floor(
-Math.random()*40
-)+20;
+const distance =
+Math.floor(Math.random()*50)+10;
 
-const totalFare =
-fakeDistance * rate;
+const fare =
+distance * vehicle;
 
 document.getElementById(
 'result'
@@ -262,62 +276,43 @@ document.getElementById(
 ).innerHTML =
 
 `
-Distance: ${fakeDistance} KM
+Distance: ${distance} KM
 <br><br>
-Total Fare: ₹${totalFare}
+Total Fare: ₹${fare}
 `;
 
 document.getElementById(
-'bookSection'
+'booking'
 ).style.display='block';
 
 }
 
-function sendWhatsApp(){
+function bookNow(){
 
 const name =
-document.getElementById(
-'customerName'
-).value;
+document.getElementById('name').value;
 
 const mobile =
-document.getElementById(
-'customerMobile'
-).value;
+document.getElementById('mobile').value;
 
 const pickup =
-document.getElementById(
-'pickup'
-).value;
+document.getElementById('pickup').value;
 
 const drop =
-document.getElementById(
-'drop'
-).value;
+document.getElementById('drop').value;
 
 const vehicle =
-document.getElementById(
-'vehicle'
-).options[
-document.getElementById(
-'vehicle'
-).selectedIndex
+document.getElementById('vehicle')
+.options[
+document.getElementById('vehicle')
+.selectedIndex
 ].text;
 
 const fare =
-document.getElementById(
-'result'
-).innerText;
+document.getElementById('result')
+.innerText;
 
-if(!name || !mobile){
-
-alert('Enter customer details');
-
-return;
-
-}
-
-const message =
+const msg =
 
 `🚖 Gupta Tour Booking
 
@@ -331,12 +326,11 @@ const message =
 
 🚘 Vehicle: ${vehicle}
 
-💰 ${fare}
-`;
+💰 ${fare}`;
 
 window.open(
 
-`https://wa.me/918840705418?text=${encodeURIComponent(message)}`
+`https://wa.me/918840705418?text=${encodeURIComponent(msg)}`
 
 );
 
